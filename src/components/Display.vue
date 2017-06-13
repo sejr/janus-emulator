@@ -18,6 +18,7 @@
 <script>
 import store from '@/store'
 
+// Simply for testing the exposed APIs
 const testScreen = [['a', 'b', 'c'], ['d', 'e', 'f'], ['g', 'h', 'i']]
 const testConfig = {
   up: false,
