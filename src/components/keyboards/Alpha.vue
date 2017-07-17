@@ -1,10 +1,10 @@
 <template>
   <div class="keyboard keyboard-alpha">
 
-    <div class="row no-gutters">
+    <div class="row no-gutters" id="functions">
       <div class="col-functions" v-for="fn in functions">
         <button
-          v-on:click=""
+          v-on:click="sendCommand('F' + fn)"
           class="btn btn-block btn-scanner btn-alpha btn-fn">
           F{{ fn }}
         </button>
@@ -46,6 +46,7 @@
 </template>
 
 <script>
+import Vue from 'vue'
 import store from '@/store'
 export default {
   name: 'alpha-keyboard',
@@ -62,6 +63,19 @@ export default {
     },
     backspace () {
       store.commit('backspace')
+    },
+    sendCommand (data) {
+      Vue.http.post('http://localhost:3000/31501/send', { data: data }).then(response => {
+        console.log(response)
+        Vue.http.get('http://localhost:3000/31501/display').then(response => {
+          // console.log(response.body)
+          store.commit('drawScreen', response.body)
+        }, response => {
+          console.log(response.body)
+        })
+      }, response => {
+        console.log(response)
+      })
     },
     toggleCaps () {
       if (this.caps) {
@@ -90,6 +104,15 @@ export default {
   }
 }
 
+#functions {
+  margin-bottom: 5px !important;
+}
+
+.btn-fn {
+  height: 25px !important;
+  margin-bottom: -5px !important;
+}
+
 .row {
   margin-left: -5px !important;
   margin-right: -5px !important;
@@ -100,7 +123,7 @@ export default {
 }
 
 .active{
-  background: lighten($primary, 10);
+  background: $primary;
   color: #fff;
 }
 
@@ -112,7 +135,7 @@ export default {
 }
 
 .col-functions {
-  width: 10%;
+  width: 20%;
   padding: 5px !important;
   font-size: 16px !important;
 

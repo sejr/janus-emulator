@@ -1,6 +1,9 @@
 // theme.scss
 // Used by the different components to coordinate the scanner color scheme.
 
-$primary: #007fff;
-$background: darken($primary, 20);
+$blue: #4286f4;
+$green: #2aba3e;
+
+$primary: $blue;
+$background: darken($primary, 30);
 $padding: 15px;

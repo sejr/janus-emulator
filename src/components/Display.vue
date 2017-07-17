@@ -7,19 +7,22 @@
       <div
         class="col-char"
         v-for="(char, colIndex) in row"
-        v-bind:class="(colIndex === cursor.x && rowIndex === cursor.y) ? 'cursor' : ''">
-        {{ char }}
-      </div> <!-- .col-char -->
+        v-bind:class="
+          (cursorEnabled && (colIndex === cursor.x && rowIndex === cursor.y))
+            ? 'cursor' /* Provides the appropriate highlighting */
+            : '' /* No change to matrix location otherwise. */ ">
 
-    </div> <!-- .row -->
-  </div> <!-- .display -->
+        {{ char }}
+      </div>
+
+    </div>
+  </div>
 </template>
 
 <script>
+import Vue from 'vue'
 import store from '@/store'
 
-// Simply for testing the exposed APIs
-const testScreen = [['a', 'b', 'c'], ['d', 'e', 'f'], ['g', 'h', 'i']]
 const testConfig = {
   up: false,
   left: false,
@@ -27,15 +30,47 @@ const testConfig = {
   down: true
 }
 
+/**
+ * Facilitates the required API call in order to close the connection to the
+ * JTS TCP server.
+ * @return {none} Computer instance is destroyed.
+ */
+window.onbeforeunload = function () {
+  Vue.http.get('http://localhost:3000/31501/destroy').then(response => {
+    console.log(response.body)
+  }, response => {
+    console.log(response.body)
+  })
+}
+
 export default {
   name: 'display',
-  created () {
-    store.commit('drawScreen', testScreen)
-    store.commit('setDirections', testConfig)
+  /**
+   * Before the display component is added to the DOM, we have to initialize
+   * the system and fetch the initial display data from the JTS TCP server.
+   * TODO: Wrap this and other API interactions inside their own set of Vuex
+   * mutations.
+   * @return {none} The display is updated with data from the JTS server.
+   */
+  beforeCreate () {
+    Vue.http.get('http://localhost:3000/31501/init').then(response => {
+      Vue.http.get('http://localhost:3000/31501/display').then(response => {
+        // console.log(response.body)
+        store.commit('drawScreen', response.body)
+        store.commit('setDirections', testConfig)
+      }, response => {
+        console.log(response.body)
+      })
+    }, response => {
+      console.log(response.body)
+    })
   },
   computed: {
     display () {
       return store.state.display
+    },
+    cursorEnabled () {
+      return store.state.cursorEnabled
     },
     cursor () {
       return store.state.cursor
@@ -47,19 +82,20 @@ export default {
 <style lang="scss">
 @import '../assets/css/theme.scss';
 @import url('https://fonts.googleapis.com/css?family=Inconsolata');
+@import url('https://fonts.googleapis.com/css?family=Fira+Mono:500');
 
 .display {
   color: #fff;
   padding: 15px;
-  height: 256px;
-  font-size: 18px;
-  font-weight: bold;
-  line-height: 14px;
+  height: 300px;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 17px;
   border-radius: 3px;
   margin-bottom: 15px;
   background: rgba(0,0,0,.9);
   word-wrap: break-word !important;
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Fira Mono', monospace;
 }
 
 .cursor {
